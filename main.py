@@ -18,6 +18,14 @@ N_COMPONENTS = 30
 DATASET_DIR  = "dataset"
 TEST_DIR     = "test"
 
+
+CLASS_COLORS = {
+    "disease": "#e74c3c",
+    "healthy": "#2ecc71",
+    "nitrogen_deficiency": "#f39c12",
+    "water_stress": "#3498db",
+}
+
 CLASSES = ["disease", "healthy", "nitrogen_deficiency", "water_stress"]
 
 CLASS_LABELS = {
@@ -238,6 +246,35 @@ def classify_leaves(X_test, class_bases):
 
     return np.array(preds), np.array(distances)
 
+
+
+def visualise_results(test_paths, predictions, distances, class_bases):
+    n_test = len(test_paths)
+    n_cols = min(n_test, 4)
+    n_rows = (n_test + n_cols - 1) // n_cols
+
+    fig = plt.figure(figsize=(18, n_rows * 4.5), facecolor="#0d1117")
+    for i, path in enumerate(test_paths):
+        ax = fig.add_subplot(n_rows, n_cols, i + 1)
+        try:
+            img = Image.open(path).convert("RGB")
+            crop = centre_crop(img, CROP_SIZE)
+            ax.imshow(crop)
+        except:
+            ax.text(0.5, 0.5, "?", ha="center", va="center", fontsize=24, color="white")
+
+        pred_name = CLASSES[predictions[i]]
+
+        ax.set_title(f"{os.path.basename(path)}\n{CLASS_LABELS[pred_name]}",
+                     color="white", fontsize=9,
+                     bbox=dict(facecolor=CLASS_COLORS[pred_name]+"44", edgecolor=CLASS_COLORS[pred_name], boxstyle="round,pad=0.3"))
+        ax.axis("off")
+
+    plt.tight_layout()
+    plt.savefig("classification_results.png", dpi=120, facecolor="#0d1117")
+    #plt.show()
+    print("\n Results saved to classification_results.png")
+
 # ──────────────────────────────
 # MAIN PIPELINE
 # ──────────────────────────────
@@ -276,6 +313,7 @@ def main():
         print(f"{os.path.basename(f):<20}  {CLASS_LABELS[pred_name]:<30}")
     print("─"*62)
 
+    visualise_results(test_paths, predictions, distances, class_bases)
 
 if __name__ == "__main__":
     main()
